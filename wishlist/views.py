@@ -3,6 +3,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.shortcuts import render
 from wishlist.models import BarangWishlist
+from wishlist.forms import taskform
 from django.http import HttpResponse
 from django.core import serializers
 from django.shortcuts import redirect
@@ -22,6 +23,31 @@ def show_wishlist(request):
     'last_login': request.COOKIES['last_login'],
     }
     return render(request, "wishlist.html", context)
+
+@login_required(login_url='/wishlist/login/')
+def show_ajax_wishlist(request):
+    data_barang_wishlist = BarangWishlist.objects.all()
+    context = {
+    'list_barang': data_barang_wishlist,
+    'nama': 'Rafialy Farrel',
+    'last_login': request.COOKIES['last_login'],
+    }
+    return render(request, "wishlist_ajax.html", context)
+
+def create_task(request):
+    if request.method == "POST":
+        form = taskform(request.POST)
+        form.instance.user = request.user
+        form.instance.date = datetime.datetime.now()
+        if form.is_valid():
+            form.save()
+            response = HttpResponseRedirect(reverse("wishlist:show_wishlist"))
+            return response
+    else:
+        form = taskform()
+
+    context = {'form':form}
+    return render(request, 'createtask.html', context)
 
 def show_xml(request):
     data = BarangWishlist.objects.all()
